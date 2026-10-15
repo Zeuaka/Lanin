@@ -1,0 +1,56 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+actor "Домовладелец" as Homeowner
+actor "Администратор системы" as Admin
+package "Система Умный дом" {
+    usecase "Регистрировать устройства" as UC1
+    usecase "Управлять освещением" as UC2
+    usecase "Настраивать сценарии" as UC3
+    usecase "Запускать сценарии" as UC4
+    usecase "Просматривать историю событий" as UC5
+    usecase "Получать уведомления" as UC6
+    
+    usecase "Обновлять ПО системы" as UC7
+    usecase "Просматривать системные логи" as UC8
+    usecase "Управлять учетными записями" as UC9
+    
+    usecase "Перекрыть воду" as UC11a
+    usecase "Отправить уведомление\nпри протечке" as UC11b
+    
+    usecase "Запись с камер" as UC12a
+    usecase "Уведомление при тревоге" as UC12b
+    usecase "Мигание света" as UC12c
+    
+    usecase "Автоматическое управление\nнаружным освещением" as UC10
+    usecase "Реагирование на датчик протечки" as UC11
+    usecase "Реагирование на датчик движения\n(Сценарий Тревоги)" as UC12
+    usecase "Автоматическое управление климатом" as UC13
+}
+Homeowner --> UC1
+Homeowner --> UC2
+Homeowner --> UC3
+Homeowner --> UC4
+Homeowner --> UC5
+Homeowner --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC9
+' Автоматические сценарии включают подфункции
+UC11 ..> UC11a : <<include>>
+UC11 ..> UC11b : <<include>>
+UC12 ..> UC12a : <<include>>
+UC12 ..> UC12b : <<include>>
+UC12 ..> UC12c : <<include>>
+' Автоматические функции расширяют пользовательские или связаны с ними
+UC10 ..> UC2 : <<extend>>
+UC11 ..> UC6 : <<extend>>
+UC12 ..> UC6 : <<extend>>
+UC13 ..> UC4 : <<extend>>
+note bottom of UC10
+  Система автоматически\nвключает/выключает свет
+end note
+note bottom of UC13
+  Поддержание заданной\nтемпературы
+end note
+@enduml

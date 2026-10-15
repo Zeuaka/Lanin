@@ -1,0 +1,142 @@
+@startuml
+title Диаграмма классов системы Умный дом
+class Homeowner {
+  - userId: String
+  - name: String
+  - email: String
+  - phoneNumber: String
+  - smartphoneToken: String
+  + registerDevice(device: Device): void
+  + controlLighting(light: SmartLight, action: String): void
+  + configureScenario(scenario: Scenario): void
+  + runScenario(scenarioId: String): void
+  + viewHistory(): List<EventLog>
+  + receiveNotification(notification: Notification): void
+}
+class SystemAdmin {
+  - adminId: String
+  - login: String
+  - passwordHash: String
+  + updateSoftware(): void
+  + viewSystemLogs(): List<EventLog>
+  + manageUserAccounts(): void
+  + resetPassword(userId: String): void
+}
+class SmartHomeSystem {
+  - systemVersion: String
+  - isActive: Boolean
+  + processSensorData(sensor: Sensor): void
+  + executeScenario(scenario: Scenario): void
+  + sendNotification(homeowner: Homeowner, message: String): Notification
+  + logEvent(eventType: String, description: String, source: Object): EventLog
+  + checkHomeStatus(): String
+}
+abstract class Device {
+  - deviceId: String
+  - deviceType: String
+  - status: String
+  - location: String
+  + turnOn(): void
+  + turnOff(): void
+  + getStatus(): String
+}
+class SmartLight {
+  - brightness: Integer
+  + setBrightness(level: Integer): void
+  + getBrightness(): Integer
+}
+class SmartPlug {
+  + switchOn(): void
+  + switchOff(): void
+}
+class SmartValve {
+  + closeWater(): void
+  + openWater(): void
+}
+class ClimateControl {
+  - mode: String
+  - targetTemp: Float
+  + turnOnHeater(): void
+  + turnOnAC(): void
+  + turnOff(): void
+}
+class Camera {
+  - cameraId: String
+  - location: String
+  - isRecording: Boolean
+  + startRecording(): void
+  + stopRecording(): void
+  + getFootage(timestamp: DateTime): Video
+}
+abstract class Sensor {
+  - sensorId: String
+  - sensorType: String
+  - currentValue: Float
+  - threshold: Float
+  + detect(): Boolean
+  + getValue(): Float
+}
+class LeakSensor {
+  + isLeakDetected(): Boolean
+}
+class MotionSensor {
+  + isMotionDetected(): Boolean
+}
+class TemperatureSensor {
+  - targetTemperature: Float
+  + getCurrentTemp(): Float
+}
+class Scenario {
+  - scenarioId: String
+  - name: String
+  - triggers: List<String>
+  - actions: List<String>
+  + activate(): void
+  + configure(triggers: List<String>, actions: List<String>): void
+}
+class Notification {
+  - notificationId: String
+  - message: String
+  - timestamp: DateTime
+  - type: String
+  - recipient: Homeowner
+  + sendToSmartphone(token: String): void
+  + markAsRead(): void
+}
+class EventLog {
+  - eventId: String
+  - timestamp: DateTime
+  - eventType: String
+  - description: String
+  - source: String
+  - relatedSensor: Sensor
+  - relatedDevice: Device
+  + createEntry(): void
+  + queryByDate(startDate: DateTime, endDate: DateTime): List<EventLog>
+  + queryBySensor(sensorId: String): List<EventLog>
+}
+' Relationships
+Homeowner "1" -- "*" Device : owns >
+Homeowner "1" -- "*" Scenario : configures >
+Homeowner "1" -- "*" Notification : receives >
+Homeowner "1" -- "*" EventLog : views >
+SystemAdmin ..> SmartHomeSystem : manages >
+SmartHomeSystem "1" -- "*" Device : controls >
+SmartHomeSystem "1" -- "*" Sensor : monitors >
+SmartHomeSystem "1" -- "*" Camera : manages >
+SmartHomeSystem "1" -- "*" Scenario : executes >
+SmartHomeSystem ..> Notification : creates >
+SmartHomeSystem ..> EventLog : creates >
+Device <|-- SmartLight
+Device <|-- SmartPlug
+Device <|-- SmartValve
+Device <|-- ClimateControl
+Sensor <|-- LeakSensor
+Sensor <|-- MotionSensor
+Sensor <|-- TemperatureSensor
+Scenario "1" -- "*" Device : controls >
+Scenario "1" -- "*" Camera : uses >
+EventLog "1" -- "0..1" Sensor : relates to >
+EventLog "1" -- "0..1" Device : relates to >
+Notification "1" -- "1" Homeowner : sent to >
+@enduml

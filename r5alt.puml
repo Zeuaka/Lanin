@@ -1,0 +1,65 @@
+@startuml
+
+package "Аппаратное обеспечение ПК" {
+
+    package "Обработка" {
+        [CPU] as CPU
+        [GPU] as GPU
+    }
+
+    package "Память" {
+        [RAM] as RAM
+        [Кэш] as Cache
+        [SSD/HDD] as Storage
+    }
+
+    package "Связь" {
+        [Материнская плата] as MB
+        [Сетевая карта] as NIC
+        [Wi-Fi модуль] as WiFi
+    }
+
+    package "Питание" {
+        [Блок питания] as PSU
+        [Розетка] as UPS
+    }
+}
+
+package "Внешние устройства" {
+    [Монитор] as Monitor
+    [Клавиатура] as KB
+    [Мышь] as Mouse
+    [Принтер] as Printer
+    [Колонки] as Speakers
+}
+
+[Локальная сеть] as LAN
+[Интернет] as Internet
+
+CPU -down-> Cache
+CPU -down-> RAM
+CPU -down-> MB
+GPU -down-> MB
+RAM -down-> MB
+Storage -down-> MB
+NIC -down-> MB
+WiFi -down-> MB
+PSU -down-> MB
+UPS -down-> PSU
+
+MB -down-> Monitor
+MB -down-> KB
+MB -down-> Mouse
+MB -down-> Printer
+MB -down-> Speakers
+
+NIC -right-> LAN
+WiFi -right-> LAN
+LAN -right-> Internet
+
+"Обработка" -down-( "Память"
+"Память" -down-( "Связь"
+"Связь" -down-( "Питание"
+"Связь" -down-( "Внешние устройства"
+
+@enduml

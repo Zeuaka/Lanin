@@ -1,0 +1,36 @@
+@startuml
+skinparam componentStyle rectangle
+
+Component "Компьютер" {
+
+    component [Процессор] as CPU
+    component [Оперативная память] as RAM
+    component [Жёсткий диск] as Storage
+    component [Видеокарта] as GPU
+    component [Материнская плата] as Motherboard
+    component [Блок питания] as PSU
+
+    component [Монитор] as Monitor
+    component [Клавиатура] as Keyboard
+    component [Мышь] as Mouse
+    component [Принтер] as Printer
+    component [Сетевая карта] as NIC
+    component [Розетка] as Fork
+}
+component [Internet] as Internet
+
+CPU -up-> Motherboard
+RAM -up-> Motherboard
+Storage -up-> Motherboard
+GPU -up-> Motherboard
+PSU -down-> Motherboard
+Fork -down-> PSU
+
+Motherboard -down-> Monitor
+Motherboard -down-> Keyboard
+Motherboard -down-> Mouse
+Motherboard -down-> Printer
+Motherboard -right-> NIC
+NIC -right-> Internet
+
+@enduml

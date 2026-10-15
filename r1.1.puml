@@ -1,0 +1,41 @@
+@startuml
+left to right direction
+
+actor "Клиент банка" as Client
+actor "Инкассатор" as Cashier
+
+usecase "Снять наличные" as Withdraw
+usecase "Проверить баланс" as Balance
+usecase "Оплатить услуги" as Pay
+usecase "Авторизация клиента" as Auth
+usecase "Печать чека" as PrintReceipt
+usecase "Запросить дополнительную комиссию" as ExtraFee
+usecase "Выполнить финансовую операцию" as FinOp
+
+usecase "Открыть сейф банкомата" as OpenSafe
+usecase "Изъять кассету с наличными" as TakeCassette
+usecase "Загрузить кассету с наличными" as LoadCassette
+usecase "Инкассация" as Collection
+usecase "Ввести код инкассатора" as CashierCode
+
+Client -- Withdraw
+Client -- Balance
+Client -- Pay
+Client -- Auth
+
+Withdraw .-> Auth : <<include>>
+Withdraw .-> PrintReceipt : <<include>>
+
+ExtraFee .-> Withdraw : <<extend>>
+
+Withdraw -- FinOp
+Pay -- FinOp
+
+Cashier -- Collection
+Cashier -- OpenSafe
+Cashier -- TakeCassette
+Cashier -- LoadCassette
+
+Collection .-> CashierCode : <<include>>
+
+@enduml

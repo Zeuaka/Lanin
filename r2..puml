@@ -1,0 +1,72 @@
+@startuml
+left to right direction
+
+actor Клиент
+actor Администратор
+actor Менеджер
+
+rectangle "Система" {
+
+  usecase "Получить консультацию" as UC0
+
+  usecase "Смотреть каталог" as UC1
+  usecase "Оценить продукт" as UC12
+  usecase "Оставить отзыв" as UC13
+  usecase "Искать продукт" as UC14
+
+  usecase "Управлять аккаунтом" as UC2
+  usecase "Зарегистироваться" as UC21
+  usecase "Авторизаваться" as UC22
+  usecase "Изменить данные" as UC23
+
+  usecase "Оформить заказ" as UC3
+  usecase "Добавить в корзину" as UC31
+  usecase "Оплатить" as UC32
+  usecase "Управлять корзиной" as UC33
+
+  usecase "Консультировать клиента" as UC4
+
+  usecase "Управлять каталогом" as UC5
+  usecase "Управлять категориями" as UC51
+  usecase "Управлять товарами" as UC52
+
+  usecase "Обработать заказ" as UC6
+
+  usecase "Администрировать сайт" as UC7
+  usecase "Добавить новость" as UC71
+  usecase "Управлять аккаунтами" as UC72
+
+  UC0 .-> UC1  : <<extend>>
+  UC12 .-> UC1 : <<extend>>
+  UC13 .-> UC1 : <<extend>>
+  UC14 .-> UC1 : <<extend>>
+
+  UC21 .-> UC2 : <<extend>>
+  UC22 .-> UC2 : <<extend>>
+  UC23 .-> UC2 : <<extend>>
+
+  UC31 .-> UC3 : <<include>>
+  UC32 .-> UC3 : <<extend>>
+  UC33 .-> UC3 : <<extend>>
+
+  UC0 .-> UC4 : <<include>>
+
+  UC51 .-> UC5 : <<extend>>
+  UC52 .-> UC5 : <<extend>>
+
+  UC71 .-> UC7 : <<extend>>
+  UC72 .-> UC7 : <<extend>>
+
+}
+
+Клиент -- UC1
+Клиент -- UC2
+Клиент -- UC3
+
+Менеджер -- UC5
+Менеджер -- UC4
+Менеджер -- UC6
+
+Администратор -- UC7
+
+@enduml
