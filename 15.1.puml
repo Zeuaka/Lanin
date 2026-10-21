@@ -1,0 +1,83 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 40
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+object "Джордж Харрисон" as Harrison
+object "Джон Леннон" as Lennon
+object "Курт Кобейн" as Cobain
+object "Кортни Лав" as Love
+object "Фрэнк Синатра" as Sinatra
+object "Мохаммед Али" as Ali
+object "Джо Фрезер" as Frazier
+
+object "The Beatles" as Beatles
+object "Nirvana" as Nirvana
+object "Washington Star" as WashingtonStar
+object "Christie’s" as Christies
+
+object "Gibson SG" as Gibson
+object "гитара" as Guitar
+object "партии" as Parts
+object "Resolver (1966)" as Resolver
+object "White Album (1968)" as WhiteAlbum
+
+object "аудиокассеты" as Tapes
+object "интервью (1975)" as Interview
+object "фотографии" as Photos
+object "письмо" as Letter
+object "галлюцинации после ЛСД" as Hallucinations
+
+object "567,5 тыс. долларов" as PriceGuitar
+object "~50 тыс. долларов" as PriceTapes
+object "~15 тыс. долларов" as PricePhotos
+object "~20 тыс. долларов" as PriceLetter
+object "1966–1969" as Years
+object "1966" as Year1966
+object "1968" as Year1968
+object "1975" as Year1975
+
+
+' --- Харрисон и гитара ---
+Harrison --> Beatles : участник
+Harrison --> Gibson : играл на\n(1966–1969)
+Gibson --> Guitar : Is-a
+Gibson --> Parts : записаны на
+Gibson --> Christies : продано на
+Gibson --> PriceGuitar : цена
+Gibson --> Years : период
+Parts --> Resolver : Part-of
+Parts --> WhiteAlbum : Part-of
+Resolver --> Year1966 : вышел в
+WhiteAlbum --> Year1968 : вышел в
+
+' --- Леннон и кассеты ---
+Lennon --> Beatles : участник
+Lennon --> WashingtonStar : дал интервью
+Lennon --> Interview : дал
+Interview --> Tapes : запись
+Tapes --> Christies : продано на
+Tapes --> PriceTapes : цена
+Interview --> Year1975 : год
+
+' --- Синатра и фото ---
+Sinatra --> Photos : сделал
+Photos --> Ali : изображают
+Photos --> Frazier : изображают
+Photos --> Christies : продано на
+Photos --> PricePhotos : цена
+
+' --- Кобейн и письмо ---
+Cobain --> Nirvana : лидер
+Cobain --> Love : жена
+Cobain --> Letter : написал
+Letter --> Hallucinations : описывает
+Letter --> Christies : продано на
+Letter --> PriceLetter : цена
+
+' --- Nirvana ---
+Nirvana --> Cobain : участник
+
+@enduml
