@@ -1,0 +1,35 @@
+@startuml
+actor "Кассир" as K
+participant ":Система" as S
+participant "п:Продажа" as P
+participant "тп:ТоварнаяПозиция" as T
+
+K -> S : ввестиТоварнуюПозицию(код, кол-во)
+activate S
+S -> P : создатьПозицию(код, кол-во)
+activate P
+P -> T : create(код, кол-во)
+activate T
+T --> P : ок
+deactivate T
+P --> S : позиция
+deactivate P
+S --> K : цена, описание
+deactivate S
+
+K -> S : завершитьПродажу()
+activate S
+S -> P : /Сумма
+S --> K : сумма
+deactivate S
+
+K -> S : провестиПлатеж(сумма)
+activate S
+alt [товар оплачен]
+  S -> P : добавитьПлатеж(сумма)
+  S --> K : сдача
+else [товар не оплачен]
+  S --> K : отмена
+end
+deactivate S
+@enduml
