@@ -1,7 +1,42 @@
-from optimize import run_optimization
+import numpy as np
+from sklearn.base import BaseEstimator, ClassifierMixin
 
-def main():
-    run_optimization()
 
-if __name__ == "__main__":
-    main()
+class MyLogisticRegression(BaseEstimator, ClassifierMixin):
+    def __init__(self, learning_rate=0.01, epochs=1000):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
+        self.weights = None
+        self.bias = None
+
+    def sigmoid(self, z):
+        z = np.clip(z, -250, 250)
+        return 1 / (1 + np.exp(-z))
+
+    def fit(self, X, y):
+        n_samples, n_features = X.shape
+        self.weights = np.zeros(n_features)
+        self.bias = 0
+        y = np.array(y)
+
+        for _ in range(self.epochs):
+            linear_model = np.dot(X, self.weights) + self.bias
+            y_predicted = self.sigmoid(linear_model)
+
+            dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y))
+            db = (1 / n_samples) * np.sum(y_predicted - y)
+
+            self.weights -= self.learning_rate * dw
+            self.bias -= self.learning_rate * db
+
+        return self
+
+    def predict_proba(self, X):
+        linear_model = np.dot(X, self.weights) + self.bias
+        prob_class_1 = self.sigmoid(linear_model)
+        prob_class_0 = 1 - prob_class_1
+        return np.column_stack((prob_class_0, prob_class_1))
+
+    def predict(self, X):
+        proba = self.predict_proba(X)[:, 1]
+        return (proba >= 0.5).astype(int)
