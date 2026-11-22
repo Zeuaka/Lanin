@@ -1,46 +1,124 @@
-import pandas as pd
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.model_selection import train_test_split
-from imblearn.pipeline import Pipeline
-from imblearn.over_sampling import SMOTE
+import warnings
+warnings.filterwarnings('ignore')
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import (classification_report, confusion_matrix,
+                             ConfusionMatrixDisplay, roc_curve, auc, f1_score, recall_score)
+from sklearn.model_selection import GridSearchCV
+from pipeline import get_data, build_pipeline
 from models.logistic import MyLogisticRegression
 
 
-def get_data():
-    data = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
-    data["TotalCharges"] = pd.to_numeric(data["TotalCharges"], errors="coerce")
-    data = data.dropna(subset=["TotalCharges"])
-    data["Churn"] = data["Churn"].map({"Yes": 1, "No": 0})
+def run_optimization():
 
-    X = data.drop(columns=["customerID", "Churn"])
-    y = data["Churn"]
+    X_train, X_test, y_train, y_test = get_data()
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.25, random_state=42, stratify=y
+    base_pipeline = build_pipeline()
+    base_pipeline.fit(X_train, y_train)
+
+    y_pred_base = base_pipeline.predict(X_test)
+    y_proba_base = base_pipeline.predict_proba(X_test)[:, 1]
+
+    print("\nОтчет по базовой модели:")
+    print(classification_report(y_test, y_pred_base, target_names=['Остался (0)', 'Ушел (1)']))
+
+    print("\nЗапуск GridSearchCV")
+    param_grid = {
+        'classifier__learning_rate': [0.001, 0.01, 0.1],
+        'classifier__epochs': [500, 1000]
+    }
+
+    grid_search = GridSearchCV(
+        base_pipeline,
+        param_grid,
+        cv=5,
+        scoring='f1',
+        n_jobs=-1,
+        verbose=1
     )
-    return X_train, X_test, y_train, y_test
+
+    grid_search.fit(X_train, y_train)
+    print(f"\nЛучшие параметры: {grid_search.best_params_}")
+    print(f"Лучший средний F1 (CV): {grid_search.best_score_:.4f}")
+
+    best_model = grid_search.best_estimator_
+    y_pred_opt = best_model.predict(X_test)
+    y_proba_opt = best_model.predict_proba(X_test)[:, 1]
+
+    print("\nОтчет по оптимизированной модели:")
+    print(classification_report(y_test, y_pred_opt, target_names=['Остался (0)', 'Ушел (1)']))
+
+    print("\n")
+
+    cm_base = confusion_matrix(y_test, y_pred_base)
+    cm_opt = confusion_matrix(y_test, y_pred_opt)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    disp_base = ConfusionMatrixDisplay(confusion_matrix=cm_base, display_labels=['Остался', 'Ушел'])
+    disp_base.plot(ax=axes[0], cmap='Greys', values_format='d', colorbar=False)
+    axes[0].set_title('Базовая модель')
+
+    disp_opt = ConfusionMatrixDisplay(confusion_matrix=cm_opt, display_labels=['Остался', 'Ушел'])
+    disp_opt.plot(ax=axes[1], cmap='Blues', values_format='d', colorbar=False)
+    axes[1].set_title('Оптимизированная (SMOTE + GridSearch)')
+
+    plt.suptitle('Сравнение матриц ошибок: до и после оптимизации', fontsize=14)
+    plt.tight_layout()
+    plt.savefig('data/task2_confusion_matrix_comparison.png')
+    plt.close()
+
+    fpr_base, tpr_base, _ = roc_curve(y_test, y_proba_base)
+    roc_auc_base = auc(fpr_base, tpr_base)
+
+    fpr_opt, tpr_opt, _ = roc_curve(y_test, y_proba_opt)
+    roc_auc_opt = auc(fpr_opt, tpr_opt)
+
+    plt.figure(figsize=(7, 5))
+    plt.plot(fpr_base, tpr_base, color='gray', lw=2, linestyle='--', label=f'Базовая (AUC = {roc_auc_base:.3f})')
+    plt.plot(fpr_opt, tpr_opt, color='darkorange', lw=2, label=f'Оптимизированная (AUC = {roc_auc_opt:.3f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle=':')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Сравнение ROC-кривых')
+    plt.legend(loc="lower right")
+    plt.savefig('data/task2_roc_curve_comparison.png')
+    plt.close()
+
+    feature_names = best_model.named_steps['preprocessor'].get_feature_names_out()
+
+    weights_opt = best_model.named_steps['classifier'].weights
+    weights_old = base_pipeline.named_steps['classifier'].weights
+
+    indices = np.argsort(np.abs(weights_opt))[-10:]
+    top_features = feature_names[indices]
+    old_coefs = weights_old[indices]
+    new_coefs = weights_opt[indices]
+
+    x = np.arange(len(top_features))
+    width = 0.35
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+    ax.barh(x - width / 2, old_coefs, width, label='Базовая модель', color='lightgray', edgecolor='black')
+    colors_new = ['green' if c > 0 else 'red' for c in new_coefs]
+    ax.barh(x + width / 2, new_coefs, width, label='Оптимизированная', color=colors_new)
+
+    ax.set_ylabel('Признак')
+    ax.set_xlabel('Вес (коэффициент)')
+    ax.set_title('Сравнение важности признаков')
+    ax.set_yticks(x)
+    ax.set_yticklabels(top_features)
+    ax.legend(loc='lower right')
+    ax.axvline(0, color='black', linewidth=1, linestyle='--')
+    plt.tight_layout()
+    plt.savefig('data/task2_feature_importance_comparison.png')
+    plt.close()
+
+    print("\nСравнение старой (Практика 1) и новой модели (Класс 'Ушел'):")
+    print(f"{'Метрика':<15} | {'Старая (P1)':>15} | {'Новая (P2)':>15}")
+    print("-" * 50)
+    print(f"{'Recall':<15} | {0.5739:>15.4f} | {recall_score(y_test, y_pred_opt):>15.4f}")
+    print(f"{'F1-score':<15} | {0.6119:>15.4f} | {f1_score(y_test, y_pred_opt):>15.4f}")
 
 
-def build_pipeline():
-    numeric_features = ['tenure', 'MonthlyCharges', 'TotalCharges', 'SeniorCitizen']
-    categorical_features = [
-        'gender', 'Partner', 'Dependents', 'PhoneService', 'MultipleLines',
-        'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
-        'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract',
-        'PaperlessBilling', 'PaymentMethod'
-    ]
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('num', StandardScaler(), numeric_features),
-            ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features)
-        ])
-
-    pipeline = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('smote', SMOTE(random_state=42)),
-        ('classifier', MyLogisticRegression(learning_rate=0.01, epochs=500))
-    ])
-
-    return pipeline
+if __name__ == "__main__":
+    run_optimization()
