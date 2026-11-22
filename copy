@@ -1,0 +1,46 @@
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.model_selection import train_test_split
+from imblearn.pipeline import Pipeline
+from imblearn.over_sampling import SMOTE
+from models.logistic import MyLogisticRegression
+
+
+def get_data():
+    data = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+    data["TotalCharges"] = pd.to_numeric(data["TotalCharges"], errors="coerce")
+    data = data.dropna(subset=["TotalCharges"])
+    data["Churn"] = data["Churn"].map({"Yes": 1, "No": 0})
+
+    X = data.drop(columns=["customerID", "Churn"])
+    y = data["Churn"]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.25, random_state=42, stratify=y
+    )
+    return X_train, X_test, y_train, y_test
+
+
+def build_pipeline():
+    numeric_features = ['tenure', 'MonthlyCharges', 'TotalCharges', 'SeniorCitizen']
+    categorical_features = [
+        'gender', 'Partner', 'Dependents', 'PhoneService', 'MultipleLines',
+        'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection',
+        'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract',
+        'PaperlessBilling', 'PaymentMethod'
+    ]
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', StandardScaler(), numeric_features),
+            ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features)
+        ])
+
+    pipeline = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('smote', SMOTE(random_state=42)),
+        ('classifier', MyLogisticRegression(learning_rate=0.01, epochs=500))
+    ])
+
+    return pipeline
